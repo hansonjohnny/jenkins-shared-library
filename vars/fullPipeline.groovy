@@ -5,12 +5,12 @@ def call(Map config) {
         tools { jdk 'jdk' }
 
         environment {
-            SCANNER_HOME        = "${tool 'sonar-scanner'}"
-            AWS_ACCOUNT_ID      = credentials('ACCOUNT_ID')
-            AWS_ECR_REPO_NAME   = credentials("${config.ecrCredId}")   // per-app credential
-            AWS_DEFAULT_REGION  = "${config.awsRegion ?: 'us-east-2'}"
-            REPOSITORY_URI      = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/"
-            NVD_KEY             = credentials('nvdApiKey')
+            SCANNER_HOME      = "${tool 'sonar-scanner'}"
+            AWS_ACCOUNT_ID    = credentials('ACCOUNT_ID')
+            AWS_ECR_REPO_NAME = credentials("${config.ecrCredId}")
+            AWS_DEFAULT_REGION = "${config.awsRegion ?: 'us-east-2'}"
+            REPOSITORY_URI    = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/"
+            NVD_KEY           = credentials('nvdApiKey')
         }
 
         options {
@@ -20,9 +20,13 @@ def call(Map config) {
         }
 
         stages {
-            stage("Cleanup Workspace")  { steps { cleanWs() } }
+            stage("Cleanup Workspace") {
+                steps { cleanWs() }
+            }
 
-            stage("Checkout")           { steps { checkout scm } }
+            stage("Checkout") {
+                steps { checkout scm }
+            }
 
             stage("Sonarqube Analysis") {
                 steps {
@@ -44,11 +48,9 @@ def call(Map config) {
 
             stage("Docker Build") {
                 steps {
-                    dockerBuildPush(
+                    dockerBuild(
                         config.appDir,
-                        env.REPOSITORY_URI,
-                        env.AWS_ECR_REPO_NAME,
-                        env.AWS_DEFAULT_REGION
+                        env.AWS_ECR_REPO_NAME
                     )
                 }
             }
@@ -57,14 +59,22 @@ def call(Map config) {
                 steps { trivyScan(null, env.AWS_ECR_REPO_NAME) }
             }
 
+            stage("Push to ECR") {
+                steps {
+                    ecrPush(
+                        env.REPOSITORY_URI,
+                        env.AWS_ECR_REPO_NAME,
+                        env.AWS_DEFAULT_REGION
+                    )
+                }
+            }
+
             stage("Update K8s Deployment") {
                 steps {
                     updateK8sDeployment(
-                        config.k8sDir,
+                        config.service,
                         env.REPOSITORY_URI,
-                        env.AWS_ECR_REPO_NAME,
-                        config.gitRepoName,
-                        config.gitUserName
+                        env.AWS_ECR_REPO_NAME
                     )
                 }
             }
