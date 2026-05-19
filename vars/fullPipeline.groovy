@@ -73,7 +73,8 @@ def call(Map config) {
                 steps {
                     updateK8sDeployment(
                         config.service,
-                        env.REPOSITORY_URI,
+                        env.AWS_ACCOUNT_ID
+                        env.AWS_ECR_REPO_NAME,
                         env.AWS_ECR_REPO_NAME
                     )
                 }
