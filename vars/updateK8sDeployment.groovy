@@ -1,6 +1,6 @@
 def call(String service, String accountId, String ecrRepoName, String region) {
     withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
-        sh "git clone https://hansonjohnny:\${GITHUB_TOKEN}@github.com/hansonjohnny/nimb-platform.git"
+        sh "git clone https://hansonjohnny:\${GITHUB_TOKEN}@github.com/hansonjohnny/nimbs-platform.git"
 
         dir('nimb-platform') {
             sh """
