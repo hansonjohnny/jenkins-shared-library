@@ -2,7 +2,7 @@ def call(Map config) {
     pipeline {
         agent any
 
-        tools { jdk 'jdk' }
+        tools { jdk 'jdk' nodejs 'nodejs' sonarScanner 'sonar-scanner' }
 
         environment {
             SCANNER_HOME      = "${tool 'sonar-scanner'}"
