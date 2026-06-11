@@ -1,5 +1,16 @@
-def call(List services) {
+// Accepts either:
+//   List<String>        — services under services/<name>/  (original behaviour)
+//   Map<String,String>  — arbitrary service -> path prefix mapping
+def call(def services) {
     def changedService = null
+
+    // Build a normalised map of service -> prefix
+    def prefixMap = [:]
+    if (services instanceof Map) {
+        prefixMap = services
+    } else {
+        services.each { svc -> prefixMap[svc] = "services/${svc}/" }
+    }
 
     node {
         def changedFiles = sh(
@@ -7,10 +18,10 @@ def call(List services) {
             returnStdout: true
         ).trim().split('\n')
 
-        for (service in services) {
-            if (changedFiles.any { it.startsWith("services/${service}/") }) {
-                echo "Detected changes in: ${service}"
-                changedService = service
+        for (entry in prefixMap) {
+            if (changedFiles.any { it.startsWith(entry.value) }) {
+                echo "Detected changes in: ${entry.key}"
+                changedService = entry.key
                 break
             }
         }
