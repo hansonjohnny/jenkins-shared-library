@@ -9,7 +9,7 @@ def call(String appDir, String imageName) {
             sh """
                 trivy fs \
                     --severity HIGH,CRITICAL \
-                    --exit-code 0 \
+                    --exit-code 1 \
                     --format json \
                     --output ${WORKSPACE}/reports/trivy/fs-scan.json .
             """
@@ -23,7 +23,7 @@ def call(String appDir, String imageName) {
         sh """
             trivy image \
                 --severity HIGH,CRITICAL \
-                --exit-code 0 \
+                --exit-code 1 \
                 --format json \
                 --output ${WORKSPACE}/reports/trivy/image-scan.json \
                 ${imageName}
